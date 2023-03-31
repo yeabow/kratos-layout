@@ -1,29 +1,25 @@
 package service
 
 import (
+	helloworldv1 "buf.build/gen/go/fyy/demo/protocolbuffers/go/helloworld/v1"
 	"context"
-
-	v1 "github.com/go-kratos/kratos-layout/api/helloworld/v1"
-	"github.com/go-kratos/kratos-layout/internal/biz"
+	"github.com/bufbuild/connect-go"
+	"github.com/go-kratos/kratos-layout/internal/conf"
+	"github.com/go-kratos/kratos/v2/log"
 )
 
 // GreeterService is a greeter service.
 type GreeterService struct {
-	v1.UnimplementedGreeterServer
+	data *conf.Data
+	log  *log.Helper
+}
 
-	uc *biz.GreeterUsecase
+// SayHello implements helloworldv1.GreeterServer.
+func (g GreeterService) SayHello(ctx context.Context, c *connect.Request[helloworldv1.HelloRequest]) (*connect.Response[helloworldv1.HelloReply], error) {
+	return connect.NewResponse[helloworldv1.HelloReply](&helloworldv1.HelloReply{Message: "Hello " + c.Msg.Name}), nil
 }
 
 // NewGreeterService new a greeter service.
-func NewGreeterService(uc *biz.GreeterUsecase) *GreeterService {
-	return &GreeterService{uc: uc}
-}
-
-// SayHello implements helloworld.GreeterServer.
-func (s *GreeterService) SayHello(ctx context.Context, in *v1.HelloRequest) (*v1.HelloReply, error) {
-	g, err := s.uc.CreateGreeter(ctx, &biz.Greeter{Hello: in.Name})
-	if err != nil {
-		return nil, err
-	}
-	return &v1.HelloReply{Message: "Hello " + g.Hello}, nil
+func NewGreeterService(data *conf.Data, logger log.Logger) *GreeterService {
+	return &GreeterService{data: data, log: log.NewHelper(logger)}
 }
